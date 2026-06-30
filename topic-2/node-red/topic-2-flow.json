@@ -1,0 +1,549 @@
+[
+    {
+        "id": "broker1",
+        "type": "mqtt-broker",
+        "name": "test.mosquitto.org",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "dash_base",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094fe",
+                "baseColor": "#0094fe",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "customTheme": {
+                "default": "#0094fe",
+                "baseColor": "#0094fe",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "themeState": {
+                "base-font": { "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif" },
+                "base-color": { "value": "#0094fe" },
+                "page-backgroundColor": { "value": "#fafafa" },
+                "page-titlebar-backgroundColor": { "value": "#0094fe" },
+                "page-sidebar-backgroundColor": { "value": "#ffffff" },
+                "group-backgroundColor": { "value": "#ffffff" },
+                "group-textColor": { "value": "#000000" },
+                "group-borderColor": { "value": "#ffffff" },
+                "widget-textColor": { "value": "#111111" },
+                "widget-backgroundColor": { "value": "#0094fe" }
+            }
+        },
+        "site": {
+            "name": "Bootcamp IoT 2026",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": { "sx": 48, "sy": 48, "gx": 6, "gy": 6, "cx": 6, "cy": 6, "px": 0, "py": 0 }
+        }
+    },
+    {
+        "id": "tab_dash",
+        "type": "ui_tab",
+        "name": "Topik 2 — MQTT Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "group_sensor",
+        "type": "ui_group",
+        "name": "Sensor DHT22",
+        "tab": "tab_dash",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "group_kontrol",
+        "type": "ui_group",
+        "name": "Kontrol Pintu",
+        "tab": "tab_dash",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "group_audit",
+        "type": "ui_group",
+        "name": "Audit Log Akses",
+        "tab": "tab_dash",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "f1",
+        "type": "tab",
+        "label": "Topic 2 — MQTT All-in-One",
+        "disabled": false,
+        "info": "Flow Node-RED untuk demo Topik 2 (MQTT All-in-One).\n\n=== KOMPONEN ===\n1. Sensor DHT22 (subscribe bootcamp/sensor/01) → Gauge + Chart\n2. Kontrol Pintu (button → publish UNLOCK ke bootcamp/kontrol/pintu)\n3. Audit Log (subscribe bootcamp/status/pintu → text display)\n\n=== CARA PAKAI ===\n1. Pastikan Wokwi simulation (sketch Topik 2) sudah jalan & MQTT connected.\n2. Deploy flow ini di Node-RED.\n3. Buka http://localhost:1880/ui untuk lihat dashboard.\n4. Klik button 'Buka Pintu' → relay Wokwi aktif 3 detik.\n5. Audit log terupdate real-time: ADMIN_REMOTE → UNLOCKED → LOCKED.\n\n=== TROUBLESHOOTING ===\n- Bila mqtt in node berstatus 'disconnected' → cek internet / broker publik.\n- Bila dashboard blank → install dulu node-red-dashboard: npm i node-red-dashboard.\n- Topic tabrakan dengan peserta lain → ganti prefix 'bootcamp' jadi 'bootcamp/<nama>'."
+    },
+    {
+        "id": "mqtt_sensor_in",
+        "type": "mqtt in",
+        "z": "f1",
+        "name": "Subscribe sensor/01",
+        "topic": "bootcamp/sensor/01",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "broker1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 100,
+        "wires": [
+            [
+                "parse_sensor_json"
+            ]
+        ]
+    },
+    {
+        "id": "parse_sensor_json",
+        "type": "json",
+        "z": "f1",
+        "name": "Parse JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 390,
+        "y": 100,
+        "wires": [
+            [
+                "gauge_suhu",
+                "gauge_lembap",
+                "extract_suhu",
+                "extract_lembap"
+            ]
+        ]
+    },
+    {
+        "id": "gauge_suhu",
+        "type": "ui_gauge",
+        "z": "f1",
+        "name": "Gauge Suhu",
+        "group": "group_sensor",
+        "order": 1,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Suhu",
+        "label": "°C",
+        "format": "{{payload.suhu}}",
+        "min": "0",
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "30",
+        "seg2": "40",
+        "className": "",
+        "x": 620,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "gauge_lembap",
+        "type": "ui_gauge",
+        "z": "f1",
+        "name": "Gauge Kelembapan",
+        "group": "group_sensor",
+        "order": 2,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Kelembapan",
+        "label": "%",
+        "format": "{{payload.lembap}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#5acee0",
+            "#0094fe",
+            "#003366"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 620,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "chart_suhu",
+        "type": "ui_chart",
+        "z": "f1",
+        "name": "Chart Suhu",
+        "group": "group_sensor",
+        "order": 3,
+        "width": "6",
+        "height": "4",
+        "label": "Historis Suhu (°C)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "50",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ca3838",
+            "#aec7e8",
+            "#ff7f0e"
+        ],
+        "outputs": 1,
+        "className": "",
+        "x": 620,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "chart_lembap",
+        "type": "ui_chart",
+        "z": "f1",
+        "name": "Chart Kelembapan",
+        "group": "group_sensor",
+        "order": 4,
+        "width": "6",
+        "height": "4",
+        "label": "Historis Kelembapan (%)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "100",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#0094fe",
+            "#aec7e8",
+            "#ff7f0e"
+        ],
+        "outputs": 1,
+        "className": "",
+        "x": 640,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "extract_suhu",
+        "type": "change",
+        "z": "f1",
+        "name": "Ambil payload.suhu",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.suhu",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 630,
+        "y": 280,
+        "wires": [
+            [
+                "chart_suhu"
+            ]
+        ],
+        "info": "Helper untuk extract nilai suhu dari JSON ke chart."
+    },
+    {
+        "id": "extract_lembap",
+        "type": "change",
+        "z": "f1",
+        "name": "Ambil payload.lembap",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.lembap",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 830,
+        "y": 280,
+        "wires": [
+            [
+                "chart_lembap"
+            ]
+        ],
+        "info": "Helper untuk extract nilai kelembapan dari JSON ke chart."
+    },
+    {
+        "id": "button_unlock",
+        "type": "ui_button",
+        "z": "f1",
+        "name": "Buka Pintu",
+        "group": "group_kontrol",
+        "order": 1,
+        "width": "6",
+        "height": "2",
+        "label": "🔑 Buka Pintu",
+        "color": "",
+        "bgcolor": "#ca3838",
+        "icon": "lock-open",
+        "payload": "UNLOCK",
+        "payloadType": "str",
+        "topic": "bootcamp/kontrol/pintu",
+        "topicType": "str",
+        "x": 180,
+        "y": 380,
+        "wires": [
+            [
+                "mqtt_kontrol_out"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_kontrol_out",
+        "type": "mqtt out",
+        "z": "f1",
+        "name": "Publish kontrol/pintu",
+        "topic": "bootcamp/kontrol/pintu",
+        "qos": "1",
+        "retain": false,
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "broker1",
+        "x": 450,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "button_lock",
+        "type": "ui_button",
+        "z": "f1",
+        "name": "Reset Perintah",
+        "group": "group_kontrol",
+        "order": 2,
+        "width": "6",
+        "height": "1",
+        "label": "🔄 Reset Perintah",
+        "color": "",
+        "bgcolor": "#666666",
+        "icon": "lock",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "bootcamp/kontrol/pintu",
+        "topicType": "str",
+        "x": 180,
+        "y": 440,
+        "wires": [
+            [
+                "mqtt_kontrol_out"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_status_in",
+        "type": "mqtt in",
+        "z": "f1",
+        "name": "Subscribe status/pintu",
+        "topic": "bootcamp/status/pintu",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "broker1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 560,
+        "wires": [
+            [
+                "format_audit"
+            ]
+        ]
+    },
+    {
+        "id": "format_audit",
+        "type": "function",
+        "z": "f1",
+        "name": "Format audit dengan timestamp",
+        "func": "// Tambahkan timestamp ke payload audit\nconst now = new Date();\nconst ts = now.toLocaleTimeString('id-ID');\n\n// Emoji berdasarkan event\nlet emoji = '📋';\nconst e = msg.payload;\nif (e === 'UNLOCKED')    emoji = '🔓';\nelse if (e === 'LOCKED')      emoji = '🔒';\nelse if (e === 'ADMIN_REMOTE')emoji = '👑';\nelse if (e === 'online')      emoji = '🟢';\nelse if (e === 'offline')     emoji = '🔴';\n\nmsg.payload = `${ts}  ${emoji}  ${e}`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 560,
+        "wires": [
+            [
+                "text_audit",
+                "text_status_pintu"
+            ]
+        ]
+    },
+    {
+        "id": "text_audit",
+        "type": "ui_text",
+        "z": "f1",
+        "name": "Audit Log",
+        "group": "group_audit",
+        "order": 1,
+        "width": "6",
+        "height": "4",
+        "label": "Event Akses Terakhir",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": false,
+        "font": "14px",
+        "fontSize": "16",
+        "color": "#000000",
+        "x": 720,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "text_status_pintu",
+        "type": "ui_text",
+        "z": "f1",
+        "name": "Status Pintu",
+        "group": "group_audit",
+        "order": 2,
+        "width": "3",
+        "height": "2",
+        "label": "Status Terakhir",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": false,
+        "font": "14px",
+        "fontSize": "16",
+        "color": "#000000",
+        "x": 730,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "debug_all_sensor",
+        "type": "debug",
+        "z": "f1",
+        "name": "Debug Sensor JSON",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "comment_architecture",
+        "type": "comment",
+        "z": "f1",
+        "name": "📜 SENSOR (subscribe bootcamp/sensor/01 → gauge + chart)",
+        "info": "ESP32 publish JSON DHT22 tiap 5 detik.\nSubscribe di sini → tampilkan suhu & kelembapan.",
+        "x": 250,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "comment_admin",
+        "type": "comment",
+        "z": "f1",
+        "name": "🔑 KONTROL PINTU (button → publish UNLOCK)",
+        "info": "Klik button untuk remote unlock dari dashboard.\nPublish payload 'UNLOCK' ke bootcamp/kontrol/pintu.",
+        "x": 240,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "comment_audit",
+        "type": "comment",
+        "z": "f1",
+        "name": "📋 AUDIT LOG (subscribe status/pintu → text)",
+        "info": "Subscribe event akses dari ESP32.\nTampilkan realtime: ADMIN_REMOTE, UNLOCKED, LOCKED, online, offline.",
+        "x": 240,
+        "y": 520,
+        "wires": []
+    }
+]

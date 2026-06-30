@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "author": "Bootcamp IoT - Topik 1 (Pertemuan Online #1)",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-breadboard-half", "id": "bb1", "top": -60.6, "left": -83.6, "attrs": {} },
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -67.2, "left": -225.56, "attrs": {} },
+    {
+      "type": "wokwi-membrane-keypad",
+      "id": "keypad1",
+      "top": -443.6,
+      "left": -157.6,
+      "attrs": {}
+    },
+    { "type": "wokwi-led", "id": "led2", "top": -128.4, "left": 167, "attrs": { "color": "red" } },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 13.55,
+      "left": 144,
+      "attrs": { "value": "1000" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "led2:A", "bb1:28t.c", "green", [ "v9.6", "h9.6" ] ],
+    [ "led2:C", "bb1:tn.21", "black", [ "v48", "h0.4" ] ],
+    [ "esp:GND.2", "bb1:tn.1", "black", [ "v0" ] ],
+    [ "esp:3V3", "bb1:tp.1", "red", [ "h0.15", "v-38.4", "h172.8" ] ],
+    [ "esp:18", "bb1:22t.e", "green", [ "h0" ] ],
+    [ "esp:32", "bb1:1t.a", "blue", [ "h-9.45", "v-28.8" ] ],
+    [ "esp:33", "bb1:2t.b", "blue", [ "h-28.65", "v-28.8" ] ],
+    [ "esp:25", "bb1:3t.c", "blue", [ "v-9.6", "h105.75", "v-19.2" ] ],
+    [ "esp:26", "bb1:4t.d", "blue", [ "h124.95", "v-28.8" ] ],
+    [ "esp:27", "bb1:6t.b", "yellow", [ "h0" ] ],
+    [ "esp:14", "bb1:7t.c", "yellow", [ "h0" ] ],
+    [ "esp:12", "bb1:8t.d", "yellow", [ "h230.55" ] ],
+    [ "esp:13", "bb1:9t.e", "yellow", [ "h0" ] ],
+    [ "keypad1:R1", "bb1:6t.a", "yellow", [ "v28.8", "h19.2", "v67.2" ] ],
+    [ "keypad1:R2", "bb1:7t.a", "yellow", [ "v19.2", "h18.8", "v67.2", "h28.8" ] ],
+    [ "keypad1:R3", "bb1:8t.a", "yellow", [ "v9.6", "h18.9", "v67.2", "h28.8" ] ],
+    [ "keypad1:R4", "bb1:9t.a", "yellow", [ "v9.6", "h19", "v57.6", "h28.8" ] ],
+    [ "r1:1", "bb1:22t.d", "", [ "$bb" ] ],
+    [ "r1:2", "bb1:28t.d", "", [ "$bb" ] ],
+    [ "keypad1:C1", "bb1:1t.e", "magenta", [ "h-57.7", "v134.4" ] ],
+    [ "keypad1:C4", "bb1:4t.e", "magenta", [ "v124.8", "h-38.7" ] ],
+    [ "keypad1:C3", "bb1:3t.e", "magenta", [ "h-38.55", "v134.4" ] ],
+    [ "keypad1:C2", "bb1:2t.e", "magenta", [ "h-57.6", "v124.8", "h19.2" ] ]
+  ],
+  "dependencies": {}
+}

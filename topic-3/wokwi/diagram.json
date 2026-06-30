@@ -1,0 +1,363 @@
+{
+  "version": 1,
+  "author": "Bootcamp IoT - Topik 3 (ESP32 Firebase All-in-One: Sensor + Kontrol Pintu via Dashboard)",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-breadboard-half",
+      "id": "bb1",
+      "top": -60.6,
+      "left": -83.6,
+      "attrs": {}
+    },
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": -67.2,
+      "left": -225.56,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -230.1,
+      "left": 13.8,
+      "attrs": {
+        "temperature": "28.5",
+        "humidity": "72"
+      }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay1",
+      "top": 105.8,
+      "left": 220.8,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_publish",
+      "top": -195.6,
+      "left": 176.6,
+      "attrs": {
+        "color": "blue"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_pintu",
+      "top": -128.4,
+      "left": 147.8,
+      "attrs": {
+        "color": "yellow"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_status",
+      "top": -157.2,
+      "left": 99.8,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_publish",
+      "top": 13.55,
+      "left": 144,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_pintu",
+      "top": 3.95,
+      "left": 134.4,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_status",
+      "top": -5.65,
+      "left": 124.8,
+      "attrs": {
+        "value": "220"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      "",
+      []
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      "",
+      []
+    ],
+    [
+      "esp:GND.2",
+      "bb1:tn.1",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "esp:3V3",
+      "bb1:tp.1",
+      "red",
+      [
+        "h0.15",
+        "v-38.4",
+        "h172.8"
+      ]
+    ],
+    [
+      "esp:5V",
+      "bb1:bp.1",
+      "red",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "esp:GND.3",
+      "bb1:bn.1",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "dht1:VCC",
+      "bb1:tp.10",
+      "red",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "dht1:GND",
+      "bb1:tn.10",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "dht1:SDA",
+      "bb1:11t.a",
+      "purple",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "esp:4",
+      "bb1:11t.e",
+      "purple",
+      [
+        "h-28.8",
+        "v-67.2",
+        "h192"
+      ]
+    ],
+    [
+      "relay1:VCC",
+      "bb1:bp.10",
+      "red",
+      [
+        "h-48",
+        "v-191.1"
+      ]
+    ],
+    [
+      "relay1:GND",
+      "bb1:bn.10",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "led_pintu:C",
+      "bb1:tn.20",
+      "black",
+      [
+        "v48",
+        "h0.4"
+      ]
+    ],
+    [
+      "led_publish:A",
+      "bb1:28t.c",
+      "blue",
+      [
+        "v9.6",
+        "h9.6"
+      ]
+    ],
+    [
+      "led_publish:C",
+      "bb1:tn.28",
+      "black",
+      [
+        "v48",
+        "h0.4"
+      ]
+    ],
+    [
+      "esp:18",
+      "bb1:22t.e",
+      "blue",
+      [
+        "h0"
+      ]
+    ],
+    [
+      "bb1:21t.e",
+      "esp:26",
+      "yellow",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "led_pintu:A",
+      "bb1:27t.b",
+      "yellow",
+      [
+        "h9.6",
+        "v67.2",
+        "h9.6"
+      ]
+    ],
+    [
+      "led_status:C",
+      "bb1:tn.15",
+      "black",
+      [
+        "h-9.2",
+        "v76.9"
+      ]
+    ],
+    [
+      "led_publish:C",
+      "bb1:tn.22",
+      "black",
+      [
+        "v0"
+      ]
+    ],
+    [
+      "led_status:A",
+      "bb1:26t.a",
+      "green",
+      [
+        "h19.2",
+        "v105.6"
+      ]
+    ],
+    [
+      "bb1:20t.c",
+      "esp:12",
+      "green",
+      [
+        "v57.6",
+        "h-345.75"
+      ]
+    ],
+    [
+      "relay1:IN",
+      "bb1:15b.h",
+      "orange",
+      [
+        "h-105.6",
+        "v-67.4"
+      ]
+    ],
+    [
+      "r_publish:1",
+      "bb1:22t.d",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "r_publish:2",
+      "bb1:28t.d",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "r_pintu:1",
+      "bb1:21t.c",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "r_pintu:2",
+      "bb1:27t.c",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "r_status:1",
+      "bb1:20t.b",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "r_status:2",
+      "bb1:26t.b",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "relay1:VCC",
+      "bb1:bp.25",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "relay1:GND",
+      "bb1:bn.25",
+      "",
+      [
+        "$bb"
+      ]
+    ],
+    [
+      "bb1:15b.j",
+      "esp:27",
+      "orange",
+      [
+        "v96",
+        "h-326.4",
+        "v-134.4"
+      ]
+    ]
+  ],
+  "dependencies": {}
+}
