@@ -129,16 +129,16 @@
 ```
 topic-1/wokwi/
 ├── 01_sensor_aktuator_potensiometer/
-│   ├── sketch.ino         ← Single-file: setup() + loop() + komentar edukasi
+│   ├── sketch.cpp         ← Single-file: setup() + loop() + komentar edukasi
 │   └── diagram.json       ← Wokwi wiring (ESP32 DevKit V1)
 │
 └── 02_digital_sensor_pin/
-    ├── sketch.ino         ← Single-file: setup() + loop() + checkPIN()
+    ├── sketch.cpp         ← Single-file: setup() + loop() + checkPIN()
     ├── diagram.json       ← Wokwi wiring (ESP32 DevKit C V4 + breadboard)
     └── libraries.txt      ← Keypad by Chris--A
 ```
 
-> **Catatan**: Berbeda dengan Topik 2 & 3 yang sudah memakai struktur modular (config + handler), Topik 1 masih single-file `.ino` karena fokusnya adalah konsep dasar I/O. Komentar edukatif sangat lengkap di dalam kode.
+> **Catatan**: Berbeda dengan Topik 2 & 3 yang sudah memakai struktur modular (config + handler), Topik 1 masih single-file `.cpp` karena fokusnya adalah konsep dasar I/O. Komentar edukatif sangat lengkap di dalam kode.
 
 ### 3.2 Library Yang Dipakai
 
