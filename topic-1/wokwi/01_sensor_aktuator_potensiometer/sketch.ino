@@ -1,3 +1,9 @@
+// Wajib di-include agar simbol Arduino (Serial, analogRead, map, delay,
+// ledcAttach, ledcWrite, dll) tersedia saat file dipakai sebagai .cpp.
+// Di .ino, include ini di-generate otomatis oleh Arduino IDE — tidak perlu
+// ditulis manual. Tapi untuk kompatibilitas .ino & .cpp, letakkan tetap aman.
+#include <Arduino.h>
+
 /*
  * Bootcamp IoT - Topik 1 (Pertemuan Online #1)
  * Studi Kasus 1: SENSOR + ADC + AKTUATOR (PWM)

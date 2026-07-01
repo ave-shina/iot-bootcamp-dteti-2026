@@ -1,3 +1,8 @@
+// Wajib di-include agar simbol Arduino (Serial, delay, digitalWrite, dll)
+// tersedia saat file dipakai sebagai .cpp. Di .ino, include ini di-generate
+// otomatis oleh Arduino IDE. Diletakkan tetap aman untuk kompatibilitas .ino & .cpp.
+#include <Arduino.h>
+
 /*
  * Bootcamp IoT - Topik 1 (Pertemuan Online #1)
  * Studi Kasus 2: SENSOR DIGITAL (Keypad matrix) + AKTUATOR (LED)
@@ -135,6 +140,11 @@ const int    PIN_LENGTH  = 4;       // Panjang PIN yang diharapkan = 4 digit.
 String inputPIN = "";               // Buffer untuk menyimpan digit yang
                                     // sudah diketik user saat ini.
                                     // Di-reset setelah verifikasi atau '*'.
+
+// Forward declaration wajib jika file dipakai sebagai .cpp (standard C++).
+// Di .ino sebenarnya tidak perlu karena Arduino IDE auto-generate prototype,
+// tetapi menambahkannya membuat file kompatibel di kedua format (.ino & .cpp).
+void checkPIN();
 
 // =========================================================================
 // setup() dijalankan SATU KALI saat boot.
