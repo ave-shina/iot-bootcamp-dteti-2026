@@ -63,7 +63,7 @@
    │                     │       │                     │
    │  - Lihat raw JSON   │       │  - Gauge suhu       │
    │  - Manual publish   │       │  - Chart historis   │
-   │  - Subscribe #      │       │  - Button admin     │
+   │  - Subscribe #      │       │  - Buka/Tutup Pintu │
    └─────────────────────┘       │  - Audit log text   │
                                  └─────────────────────┘
 ```
@@ -109,10 +109,11 @@
 
 ```
 topic-2/wokwi/
-├── sketch.c               ← MAIN: setup() + loop() saja
+├── sketch.cpp             ← MAIN: setup() + loop() saja
 ├── config.h     .cpp      ← Konstanta & globals (WiFi, broker, topics, GPIO)
 ├── mqtt_handler.h .cpp    ← API MQTT + door control (setup, reconnect,
-│                            publish, onMessage, setupOutputs, unlockDoor)
+│                            publish, onMessage, setupOutputs,
+│                            unlockDoor, lockDoor)
 ├── diagram.json            ← Wokwi wiring
 ├── libraries.txt           ← PubSubClient + ArduinoJson + DHT
 └── README.md               ← Dokumentasi penggunaan
@@ -130,7 +131,7 @@ topic-2/wokwi/
 ### 3.3 Dependency Graph Antar-Modul
 
 ```
-   sketch.c
+   sketch.cpp
       │
       ├──► config.h
       │
@@ -150,19 +151,28 @@ topic-2/wokwi/
    ├── sensor/
    │   └── 01              ──► ESP32 publish JSON DHT22 (QoS 0, retain=false)
    ├── kontrol/
-   │   └── pintu           ──► Dashboard publish "UNLOCK" (QoS 1, retain=false)
-   │                            ESP32 subscribe
+   │   └── pintu           ──► Dashboard publish "UNLOCK"/"LOCK" (QoS 1, retain=false)
+   │                            ESP32 subscribe → unlockDoor / lockDoor
    └── status/
-       └── pintu           ──► ESP32 publish audit/state (QoS 1, retain=true)
+       ├── pintu           ──► ESP32 publish STATE PINTU + audit (QoS 1, retain=true)
+       │                       LOCKED / UNLOCKED / ADMIN_REMOTE / ADMIN_LOCK
+       └── presence        ──► ESP32 publish PRESENCE koneksi (QoS 1, retain=true)
+                               online / offline (LWT)
 ```
+
+> **Kenapa dipisah?** State pintu (LOCKED/UNLOCKED) dan presence (online/offline)
+> sama-sama dipublikasi retained. Kalau berbagi satu topik, keduanya saling timpa
+> — subscriber bisa dapat "online" padahal ingin tahu lock/unlock. Topik terpisah
+> membuat masing-masing retained value selalu akurat untuk concern-nya.
 
 ### 4.2 Payload per Topik
 
 | Topik                     | Arah             | Payload                                                                 | Retain | QoS |
 | ------------------------- | ---------------- | ----------------------------------------------------------------------- | ------ | --- |
 | `bootcamp/sensor/01`      | ESP → broker     | `{"id":"sensor_01","suhu":28.5,"lembap":72.0,"ts":4521,"rssi":-58}`     | ❌      | 0   |
-| `bootcamp/kontrol/pintu`  | broker → ESP     | `"UNLOCK"` (dari dashboard)                                             | ❌      | 1   |
-| `bootcamp/status/pintu`   | ESP → broker     | `online` / `offline` (LWT) / `UNLOCKED` / `LOCKED` / `ADMIN_REMOTE`     | ✅      | 1   |
+| `bootcamp/kontrol/pintu`  | broker → ESP     | `"UNLOCK"` / `"LOCK"` (dari dashboard)                                  | ❌      | 1   |
+| `bootcamp/status/pintu`   | ESP → broker     | `LOCKED` / `UNLOCKED` (state) + `ADMIN_REMOTE` / `ADMIN_LOCK` (audit) | ✅      | 1   |
+| `bootcamp/status/presence`| ESP → broker     | `online` / `offline` (LWT — connection presence)                      | ✅      | 1   |
 
 ### 4.3 Konsep MQTT Penting
 
@@ -206,9 +216,10 @@ topic-2/wokwi/
       ├─ client.connected() ?
       │     │
       │     ├─ TIDAK ──► reconnect()          (throttled 5 detik)
-      │     │               ├─ client.connect(clientID, ..., LWT)
+      │     │               ├─ client.connect(clientID, ..., LWT → presence)
       │     │               ├─ client.subscribe(kontrol/pintu)
-      │     │               ├─ client.publish(status/pintu, "online", retained)
+      │     │               ├─ client.publish(status/presence, "online", retained)
+      │     │               ├─ publishStatus(doorState, retained)  ← re-publish state pintu
       │     │               └─ LED hijau ON
       │     │
       │     └─ YA ──► client.loop()           ⚠ WAJIB: pompa callback MQTT
@@ -225,10 +236,12 @@ topic-2/wokwi/
 ### 5.3 Event Flow: Admin Dashboard Override
 
 ```
-   Operator klik button "Buka Pintu" di Node-RED dashboard
+   Operator klik button di Node-RED dashboard:
+     • "🔑 Buka Pintu"  → publish "UNLOCK"
+     • "🔒 Tutup Pintu" → publish "LOCK"
       │
       ▼
-   Node-RED publish "UNLOCK" ke bootcamp/kontrol/pintu (QoS 1)
+   Node-RED publish payload ke bootcamp/kontrol/pintu (QoS 1, retain=false)
       │
       ▼
    Broker terima, route ke semua subscriber
@@ -240,17 +253,27 @@ topic-2/wokwi/
    onMessage(topic, payload, length) ter-trigger
       │
       ├─ Konversi byte[] → null-terminated string
-      ├─ Routing per topic
-      └─ Topic == kontrol/pintu & payload == "UNLOCK"?
+      ├─ Normalisasi: uppercase + trim (case-insensitive)
+      └─ Routing per topic → kontrol/pintu:
             │
-            └─ YA ──► publishStatus("ADMIN_REMOTE")
-                     └─ unlockDoor("mqtt-admin")
-                           ├─ relay + LED kuning HIGH
-                           ├─ publishStatus("UNLOCKED")
-                           ├─ delay(3000)
-                           ├─ relay + LED kuning LOW
-                           └─ publishStatus("LOCKED")
+            ├─ payload == "UNLOCK"?
+            │     └─ YA ──► unlockDoor("mqtt-admin")
+            │                 ├─ relay GPIO27 + LED kuning HIGH
+            │                 ├─ publishStatus("ADMIN_REMOTE")      ← event (not retained)
+            │                 └─ publishStatus("UNLOCKED", true)    ← state retained (persisten)
+            │                    (TETAP terbuka — TIDAK ada auto-lock)
+            │
+            └─ payload == "LOCK"?
+                  └─ YA ──► lockDoor("mqtt-admin")
+                              ├─ relay GPIO27 + LED kuning LOW
+                              ├─ publishStatus("ADMIN_LOCK")        ← event (not retained)
+                              └─ publishStatus("LOCKED", true)      ← state retained (persisten)
 ```
+
+> **Catatan desain (opsi C — persistent state):** `unlockDoor()` **tidak** memanggil
+> `delay()` atau auto-lock. Pintu tetap UNLOCKED sampai perintah `LOCK` masuk.
+> State dipublikasi retained, sehingga subscriber baru (mis. dashboard yang baru
+> dibuka) langsung mendapat state terakhir tanpa menunggu event berikutnya.
 
 ### 5.4 Data Flow: Sensor Publish (5 detik)
 
@@ -292,17 +315,19 @@ topic-2/wokwi/
         │
         ▼
    3. Broker publish LWT message:
-        topic:   bootcamp/status/pintu
+        topic:   bootcamp/status/presence   ← topik presence (terpisah dari state pintu)
         payload: "offline"
         retain:  true
         QoS:     1
         │
         ▼
-   4. Semua subscriber (Node-RED dashboard) terima "offline"
+   4. Semua subscriber presence (Node-RED) terima "offline"
         │
         ▼
-   5. Dashboard tampilkan "🔴 offline" di audit log
+   5. Dashboard tampilkan "🔴 offline (presence)" di audit log
         (LED hijau di ESP32 mati karena client.connected() = false)
+        Catatan: retained state pintu di status/pintu TIDAK terganggu —
+        subscriber tetap dapat nilai LOCKED/UNLOCKED terakhir.
 ```
 
 ---
@@ -313,35 +338,47 @@ topic-2/wokwi/
 
 ```
    ┌─────────────────┐
-   │   LOCKED        │ ◄── default state (saat boot)
-   │   (idle)        │
+   │   LOCKED        │ ◄── default state (saat boot: relay LOW, LED kuning OFF)
+   │   relay LOW     │
+   │   LED kuning OFF│
    └────────┬────────┘
             │
-            │ trigger: MQTT "UNLOCK" diterima
+            │ trigger: MQTT "UNLOCK" diterima → unlockDoor()
             │
             ▼
    ┌─────────────────┐
-   │   UNLOCKED      │
-   │   relay HIGH    │ ── publishStatus("ADMIN_REMOTE")
-   │   LED kuning ON │ ── publishStatus("UNLOCKED")
-   │   delay(3000)   │
+   │   UNLOCKED      │ ── publishStatus("ADMIN_REMOTE")      ← event
+   │   relay HIGH    │ ── publishStatus("UNLOCKED", true)    ← state retained
+   │   LED kuning ON │   (TETAP di state ini — TIDAK ada auto-lock / timer)
    └────────┬────────┘
             │
-            │ setelah 3 detik
+            │ trigger: MQTT "LOCK" diterima → lockDoor()
+            │
             ▼
    ┌─────────────────┐
-   │   LOCKED        │
-   │   (kembali)     │ ── publishStatus("LOCKED")
+   │   LOCKED        │ ── publishStatus("ADMIN_LOCK")        ← event
+   │   (kembali)     │ ── publishStatus("LOCKED", true)      ← state retained
    └─────────────────┘
 ```
+
+> Tidak ada transisi waktu. Satu-satunya cara pindah state adalah perintah
+> MQTT `UNLOCK` / `LOCK` (dari dashboard Node-RED atau client MQTT lain).
+> State dipublikasi retained, jadi setelah reboot ESP32 tetap membaca state
+> terakhir yang tersimpan di broker saat reconnect.
 
 ### 6.2 Audit Event Sequence
 
 ```
-   Trigger via dashboard (satu-satunya cara):
-     1. publishStatus("ADMIN_REMOTE")
-     2. publishStatus("UNLOCKED")    ── 3 detik ──
-     3. publishStatus("LOCKED")
+   UNLOCK — klik "🔑 Buka Pintu"  (atau publish "UNLOCK"):
+     1. publishStatus("ADMIN_REMOTE")     ← event audit (not retained)
+     2. publishStatus("UNLOCKED", true)   ← state (retained, persisten)
+
+   LOCK — klik "🔒 Tutup Pintu"  (atau publish "LOCK"):
+     1. publishStatus("ADMIN_LOCK")       ← event audit (not retained)
+     2. publishStatus("LOCKED", true)     ← state (retained, persisten)
+
+   Catatan: tidak ada delay(3000) maupun auto-lock. Urutan LOCKED HANYA
+   terjadi setelah perintah LOCK, bukan otomatis setelah beberapa detik.
 ```
 
 ---
@@ -354,8 +391,8 @@ topic-2/wokwi/
 | ---- | --------------------------------------- | -------------------------------------------------------- |
 | 1    | Start Wokwi simulation                  | Serial: "MQTT connected" + LED hijau ON                  |
 | 2    | Buka Node-RED dashboard `:1880/ui`      | Gauge suhu muncul, update tiap 5 detik                   |
-| 3    | Klik button "🔑 Buka Pintu"             | Relay + LED kuning aktif 3 detik; audit `ADMIN_REMOTE`   |
-| 4    | Tunggu 3 detik                          | Audit berlanjut: `UNLOCKED` → `LOCKED`                   |
+| 3    | Klik "🔑 Buka Pintu"                    | Relay + LED kuning ON & **tetap**; audit `ADMIN_REMOTE` → `UNLOCKED` |
+| 4    | Klik "🔒 Tutup Pintu"                   | Relay + LED kuning OFF; audit `ADMIN_LOCK` → `LOCKED`     |
 | 5    | Stop simulation mendadak                | Node-RED terima "offline" (LWT retained)                 |
 | 6    | Restart simulation                      | Audit `online` kembali; sensor publish lanjut            |
 
@@ -400,9 +437,10 @@ topic-2/wokwi/
 const char* WIFI_SSID     = "Wokwi-GUEST";
 const char* MQTT_BROKER   = "test.mosquitto.org";
 const uint16_t MQTT_PORT  = 1883;
-const char* TOPIC_SENSOR  = "bootcamp/sensor/01";
-const char* TOPIC_KONTROL = "bootcamp/kontrol/pintu";
-const char* TOPIC_STATUS  = "bootcamp/status/pintu";
+const char* TOPIC_SENSOR   = "bootcamp/sensor/01";
+const char* TOPIC_KONTROL  = "bootcamp/kontrol/pintu";
+const char* TOPIC_STATUS   = "bootcamp/status/pintu";
+const char* TOPIC_PRESENCE = "bootcamp/status/presence";
 String      MQTT_CLIENT_ID = "esp32_all_in_01";
 const unsigned long PUBLISH_INTERVAL_MS = 5000;
 ```
@@ -422,13 +460,18 @@ while True:
 ### C. Decision Tree Akses Pintu
 
 ```
-   pesan MQTT masuk di TOPIC_KONTROL
+   pesan MQTT masuk di TOPIC_KONTROL  (dinormalisasi: uppercase + trim)
       │
       ├─ payload == "UNLOCK" ──► unlockDoor("mqtt-admin")
-      │                            ├─ publishStatus("ADMIN_REMOTE")
-      │                            ├─ publishStatus("UNLOCKED")
-      │                            ├─ delay(3000)
-      │                            └─ publishStatus("LOCKED")
+      │                            ├─ relay + LED kuning HIGH
+      │                            ├─ publishStatus("ADMIN_REMOTE")      ← event
+      │                            └─ publishStatus("UNLOCKED", true)    ← state retained
+      │                               (TETAP terbuka — no auto-lock)
       │
-      └─ payload lain ──► log "Perintah tidak dikenal" (no action)
+      ├─ payload == "LOCK" ────► lockDoor("mqtt-admin")
+      │                            ├─ relay + LED kuning LOW
+      │                            ├─ publishStatus("ADMIN_LOCK")        ← event
+      │                            └─ publishStatus("LOCKED", true)      ← state retained
+      │
+      └─ payload lain ────────► log "Perintah tidak dikenal" (no action)
 ```

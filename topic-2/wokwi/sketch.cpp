@@ -11,7 +11,7 @@
  * STRUKTUR FILE (modular .h + .cpp)
  * ============================================================================
  *
- *   sketch.c               ← MAIN ENTRY (file ini). Hanya setup() + loop().
+ *   sketch.cpp             ← MAIN ENTRY (file ini). Hanya setup() + loop().
  *   config.h     .cpp      ← Konstanta & globals (WiFi creds, MQTT broker,
  *                            topics, GPIO, DHT object).
  *   mqtt_handler.h .cpp    ← API MQTT + door control: setupWiFi, setupMQTT,
@@ -19,7 +19,7 @@
  *                            onMessage, setupOutputs, unlockDoor.
  *
  *   Dependencies:
- *     sketch.c    →  config.h
+ *     sketch.cpp  →  config.h
  *                →  mqtt_handler.h
  *
  * ============================================================================
@@ -51,27 +51,35 @@
  *   │                    publishSensor()  ← self-throttled 5s   │
  *   └─────────────────────────────────────────────────────────┘
  *
- *   EVENT PATH (asynchronous):
+ *   EVENT PATH (asynchronous, persistent state — opsi C):
  *
- *   Pesan MQTT masuk di TOPIC_KONTROL dengan payload "UNLOCK":
- *        onMessage() ter-trigger via client.loop()
- *          → publishStatus("ADMIN_REMOTE")
- *          → unlockDoor("mqtt-admin")
- *              ├─ relay HIGH + LED kuning HIGH
- *              ├─ publishStatus("UNLOCKED")
- *              ├─ delay(3000)  ← blocking 3 detik (demo)
- *              ├─ relay LOW + LED kuning LOW
- *              └─ publishStatus("LOCKED")
+ *   Pesan MQTT masuk di TOPIC_KONTROL → onMessage() via client.loop():
+ *     • payload "UNLOCK" → unlockDoor("mqtt-admin")
+ *     • payload "LOCK"   → lockDoor("mqtt-admin")
+ *
+ *   unlockDoor():  relay HIGH + LED kuning HIGH
+ *                  publishStatus("ADMIN_REMOTE")      ← event (not retained)
+ *                  publishStatus("UNLOCKED", true)    ← state retained
+ *                  (TETAP terbuka — TIDAK ada auto-lock / delay)
+ *
+ *   lockDoor():    relay LOW + LED kuning LOW
+ *                  publishStatus("ADMIN_LOCK")        ← event (not retained)
+ *                  publishStatus("LOCKED", true)      ← state retained
  *
  * ============================================================================
  * MQTT TOPICS (3 path):
  * ============================================================================
  *
- *   bootcamp/sensor/01    (ESP → broker)   JSON DHT22 tiap 5 detik
- *   bootcamp/kontrol/pintu (broker → ESP)  "UNLOCK" admin override
- *   bootcamp/status/pintu (ESP → broker)  audit + state (retained)
- *                                         UNLOCKED/LOCKED/ADMIN_REMOTE/
- *                                         online/offline (LWT)
+ *   bootcamp/sensor/01       (ESP → broker)  JSON DHT22 tiap 5 detik
+ *   bootcamp/kontrol/pintu   (broker → ESP)  "UNLOCK"/"LOCK" admin override
+ *   bootcamp/status/pintu    (ESP → broker)  STATE PINTU + audit (retained):
+ *                                            UNLOCKED/LOCKED/ADMIN_REMOTE/ADMIN_LOCK
+ *   bootcamp/status/presence (ESP → broker)  PRESENCE koneksi (retained, LWT):
+ *                                            online/offline
+ *
+ *   Catatan: state pintu & presence dipisah ke topik berbeda supaya tidak
+ *   saling timpa sebagai retained message. Subscriber status/pintu langsung
+ *   mendapat lock/unlock, bukan "online".
  *
  * ============================================================================
  * Wiring (lihat diagram.json):
@@ -89,10 +97,12 @@
  *
  *   1. Start simulation → buka Serial Monitor (115200 baud).
  *   2. Sensor publish tiap 5 detik → LED biru blink + ">> Publish sensor OK".
- *   3. Klik tombol "Buka Pintu" di dashboard Node-RED → relay + LED kuning
- *      aktif 3 detik → audit "ADMIN_REMOTE" muncul.
- *   4. Atau via MQTT Explorer → publish "UNLOCK" ke "bootcamp/kontrol/pintu".
- *   5. Subscribe "bootcamp/sensor/#" + "bootcamp/status/pintu" → lihat data + audit.
+ *   3. Klik "🔑 Buka Pintu" di dashboard Node-RED → relay + LED kuning ON &
+ *      TETAP (no auto-lock). Audit "ADMIN_REMOTE" → "UNLOCKED" muncul.
+ *   4. Klik "🔒 Tutup Pintu" → relay + LED kuning OFF. Audit "ADMIN_LOCK"
+ *      → "LOCKED".
+ *   5. Atau via MQTT Explorer → publish "UNLOCK"/"LOCK" ke "bootcamp/kontrol/pintu".
+ *   6. Subscribe "bootcamp/sensor/#" + "bootcamp/status/pintu" → lihat data + audit.
  *
  * Catatan keamanan:
  *   - Broker test.mosquitto.org = PUBLIK tanpa auth.
@@ -117,7 +127,7 @@ void setup() {
   Serial.println("  ESP32 MQTT ALL-IN-ONE (Sensor + Pintu)");
   Serial.println("============================================");
   Serial.println("  Kontrol pintu via dashboard Node-RED.");
-  Serial.println("  Klik tombol 'Buka Pintu' untuk membuka.");
+  Serial.println("  'Buka Pintu' = UNLOCK, 'Tutup Pintu' = LOCK.");
   Serial.println();
 
   dht.begin();                       // init sensor DHT22

@@ -1,6 +1,6 @@
 /*
  * config.h — Semua deklarasi konstanta, GPIO pin, dan extern globals.
- * Dipakai oleh sketch.c + mqtt_handler.
+ * Dipakai oleh sketch.cpp + mqtt_handler.
  *
  * Instruksi:
  *   - Edit konstanta di config.cpp (bukan di header ini).
@@ -30,8 +30,9 @@ extern const uint16_t MQTT_PORT;
 // MQTT topics
 // =====================
 extern const char* TOPIC_SENSOR;     // publish data DHT22
-extern const char* TOPIC_KONTROL;    // subscribe admin UNLOCK
-extern const char* TOPIC_STATUS;     // publish audit + LWT
+extern const char* TOPIC_KONTROL;    // subscribe admin UNLOCK / LOCK
+extern const char* TOPIC_STATUS;     // publish state pintu (LOCKED/UNLOCKED) + audit
+extern const char* TOPIC_PRESENCE;   // publish presence (online/offline LWT)
 extern String      MQTT_CLIENT_ID;   // harus unik di broker
 
 // =====================

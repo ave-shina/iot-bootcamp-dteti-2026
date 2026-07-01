@@ -119,8 +119,8 @@ Ganti dengan URL + Key project Anda.
 
 ## Alur Demo
 
-1. **Sensor publish** — tiap 5 detik, DHT22 dibaca → `setJSON` ke `/sensor/01` → LED biru blink.
-2. **Kontrol pintu via Firebase** — di Firebase Console (atau web dashboard), set `/kontrol/pintu = "UNLOCK"` → `streamCallback()` ter-trigger → ESP buka relay 3 detik + `pushAudit("ADMIN_REMOTE")`.
+1. **Sensor publish** — tiap 5 detik, DHT22 dibaca → `PUT` JSON ke `/sensor/01` → LED biru blink.
+2. **Kontrol pintu via Firebase** — di Firebase Console (atau web dashboard), set `/kontrol/pintu = "UNLOCK"` (buka) atau `"LOCK"` (kunci) → `pollKontrol()` mendeteksi perubahan → ESP buka/kunci relay (persistent, no auto-lock) + `pushAudit("ADMIN_REMOTE")` / `"ADMIN_LOCK")`. State pintu tertulis di `/status/pintu`; presence (online) terpisah di `/status/presence`.
 
 ---
 
@@ -129,7 +129,7 @@ Ganti dengan URL + Key project Anda.
 ### 1. Setup Wokwi
 
 1. Buka https://wokwi.com → **New Project Arduino**.
-2. Ganti isi `diagram.json`, `sketch.ino`, dan buat `libraries.txt` dari folder proyek ini.
+2. Ganti isi `diagram.json`, `sketch.cpp`, dan buat `libraries.txt` dari folder proyek ini.
 3. Upload juga `config.h`, `config.cpp`, `firebase_handler.h`, `firebase_handler.cpp`.
 4. Update `DATABASE_URL` + `API_KEY` di `config.cpp`.
 5. **Start Simulation**.
@@ -185,9 +185,11 @@ bootcamp-iot-2026-andi/
 
 | Skenario       | Aksi                                          | Hasil Expected                                              |
 | -------------- | --------------------------------------------- | ----------------------------------------------------------- |
-| Buka via Console | Firebase Console: set `/kontrol/pintu = "UNLOCK"` | Relay + LED kuning aktif 3 detik, audit `ADMIN_REMOTE`     |
-| Buka via web     | Web dashboard: klik button "Buka Pintu"       | Sama seperti di atas                                        |
-| Status           | Lihat `/status/pintu`                          | Berubah `online` → `UNLOCKED` → `LOCKED`                   |
+| Buka via Console | Console: set `/kontrol/pintu = "UNLOCK"`      | Relay + LED kuning ON & tetap; audit `ADMIN_REMOTE`→`UNLOCKED` |
+| Kunci via Console| Console: set `/kontrol/pintu = "LOCK"`        | Relay + LED kuning OFF; audit `ADMIN_LOCK`→`LOCKED`            |
+| Buka/Kunci web   | Web dashboard: klik button UNLOCK / LOCK      | Sama seperti via Console                                       |
+| Status pintu     | Lihat `/status/pintu`                         | Hanya `LOCKED`/`UNLOCKED` (bersih, retained)                   |
+| Presence         | Lihat `/status/presence`                      | `online` (terpisah dari state pintu)                           |
 
 ### 5. Web Dashboard (Opsional, Materi Part 4)
 

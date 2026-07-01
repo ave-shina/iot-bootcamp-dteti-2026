@@ -6,9 +6,10 @@
  *   - reconnect()                  — koneksi management (throttled 5s)
  *   - publishSensor()              — publish JSON DHT22 ke TOPIC_SENSOR (self-throttled)
  *   - publishStatus()              — publish audit/state ke TOPIC_STATUS
- *   - onMessage()                  — callback pesan masuk (admin override UNLOCK)
+ *   - onMessage()                  — callback pesan masuk (admin override UNLOCK/LOCK)
  *   - setupOutputs()               — pinMode semua relay + LED
- *   - unlockDoor(source)           — buka pintu 3 detik lalu kunci otomatis
+ *   - unlockDoor(source)           — buka pintu (persistent, no auto-lock)
+ *   - lockDoor(source)             — kunci pintu (persistent)
  */
 #pragma once
 

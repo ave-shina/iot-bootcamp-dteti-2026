@@ -1,6 +1,6 @@
 /*
  * config.h — Semua deklarasi konstanta, GPIO pin, dan extern globals.
- * Dipakai oleh sketch.ino + firebase_handler.
+ * Dipakai oleh sketch.cpp + firebase_handler.
  *
  * Instruksi:
  *   - Edit konstanta di config.cpp (bukan di header ini).

@@ -37,6 +37,7 @@ void unlockDoor(const char* source) {
   Serial.println(">> [DOOR] LED GPIO26   : ON    (kuning steady)");
   Serial.println("========================================");
 
+  doorState = "UNLOCKED";                 // track state aktual
   digitalWrite(PIN_RELAY, HIGH);   // energize relay → solenoid tertarik
   digitalWrite(PIN_PINTU, HIGH);   // nyalakan LED kuning (selama UNLOCKED)
   publishStatus("ADMIN_REMOTE");          // audit event (not retained)
@@ -56,6 +57,7 @@ void lockDoor(const char* source) {
   Serial.println(">> [DOOR] LED GPIO26   : OFF   (kuning mati)");
   Serial.println("========================================");
 
+  doorState = "LOCKED";                   // track state aktual
   digitalWrite(PIN_RELAY, LOW);    // matikan relay → solenoid kembali
   digitalWrite(PIN_PINTU, LOW);    // matikan LED kuning
   publishStatus("ADMIN_LOCK");            // audit event (not retained)
@@ -70,6 +72,12 @@ PubSubClient  client(espClient);
 
 unsigned long lastReconnect = 0;
 unsigned long lastPublish   = 0;
+
+// State pintu aktual (LOCKED default — relay LOW saat boot). Di-update oleh
+// unlockDoor/lockDoor dan dipakai reconnect() untuk re-publish state asli ke
+// TOPIC_STATUS, sehingga subscriber langsung dapat lock/unlock (bukan "online")
+// dan tidak bergantung pada retained broker yang bisa stale setelah reboot.
+const char* doorState = "LOCKED";
 
 // =====================
 // setupWiFi() — koneksi WiFi (blocking dengan timeout 20s)
@@ -116,7 +124,7 @@ void setupMQTT() {
 //
 // Non-blocking: bila belum 5 detik sejak upaya terakhir, langsung return false.
 // Setiap upaya connect() juga set Last Will Testament (LWT) supaya broker
-// publish "offline" ke TOPIC_STATUS bila ESP disconnect mendadak.
+// publish "offline" ke TOPIC_PRESENCE bila ESP disconnect mendadak.
 // =====================
 bool reconnect() {
   if (client.connected()) return true;
@@ -129,7 +137,7 @@ bool reconnect() {
   bool ok = client.connect(
     MQTT_CLIENT_ID.c_str(),   // client ID unik (anti kick dari broker)
     NULL, NULL,               // username & password (NULL = anonim)
-    TOPIC_STATUS,             // will topic: broker publish ke sini bila ESP mati
+    TOPIC_PRESENCE,           // will topic: broker publish "offline" ke sini bila ESP mati
     1,                        // will QoS = 1 (at least once)
     true,                     // will retained = true
     "offline"                 // will payload (LWT message)
@@ -142,8 +150,12 @@ bool reconnect() {
     Serial.print("  Subscribed: ");
     Serial.println(TOPIC_KONTROL);
 
-    // Overwrite LWT dengan "online" (retained)
-    client.publish(TOPIC_STATUS, "online", true);
+    // Presence (TERPISAH dari state pintu): overwrite LWT dengan "online"
+    client.publish(TOPIC_PRESENCE, "online", true);
+    // State pintu: re-publish state aktual (retained) supaya subscriber
+    // TOPIC_STATUS langsung dapat lock/unlock — bukan "online", dan tidak
+    // bergantung pada retained broker yang bisa stale setelah reboot.
+    publishStatus(doorState, true);
     digitalWrite(PIN_LED, HIGH);     // LED hijau = MQTT connected
   } else {
     Serial.print("FAIL state=");

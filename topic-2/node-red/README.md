@@ -15,18 +15,19 @@ File `topic-2-flow.json` adalah flow Node-RED siap-import untuk dashboard demo T
 │                   └─► chart kelembapan (5 menit)         │
 └──────────────────────────────────────────────────────────┘
 
-┌─ 🔑 KONTROL PINTU (button → publish UNLOCK) ────────────┐
+┌─ 🔑 KONTROL PINTU (button → publish UNLOCK / LOCK) ─────┐
 │                                                          │
-│  button "Buka Pintu"     ─► mqtt out                     │
-│  button "Reset Perintah" ─► mqtt out                     │
-│    (payload UNLOCK, QoS 1, retain=false)                 │
+│  button "Buka Pintu"   → mqtt out  (payload UNLOCK)      │
+│  button "Tutup Pintu"  → mqtt out  (payload LOCK)        │
+│    (QoS 1, retain=false)                                 │
 └──────────────────────────────────────────────────────────┘
 
-┌─ 📋 AUDIT LOG (subscribe status/pintu) ─────────────────┐
+┌─ 📋 AUDIT LOG (status/pintu + status/presence) ──────────┐
 │                                                          │
-│  mqtt in ─► function (timestamp + emoji)                 │
-│              ├─► text "Event Akses Terakhir"             │
-│              └─► text "Status Terakhir"                  │
+│  status/pintu    → function → text "Audit Log"           │
+│                              → text "Status Pintu"       │
+│  status/presence → function → text "Audit Log"           │
+│    (state+audit)              (online/offline LWT)       │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -76,7 +77,7 @@ Buka: `http://localhost:1880/ui`
 
 Anda akan melihat 3 group:
 - **Sensor DHT22** → gauge suhu/kelembapan + chart historis
-- **Kontrol Pintu** → button buka pintu + reset
+- **Kontrol Pintu** → button Buka + Tutup Pintu
 - **Audit Log Akses** → event akses realtime + status terakhir
 
 ---
@@ -90,9 +91,10 @@ Anda akan melihat 3 group:
 
 ### Test 2: Kontrol pintu via dashboard
 1. Klik button **"🔑 Buka Pintu"** di dashboard
-2. LED hijau + relay di Wokwi aktif 3 detik
-3. Audit log di dashboard muncul: `👑 ADMIN_REMOTE`
-4. Setelah 3 detik: `🔓 UNLOCKED` → `🔒 LOCKED`
+2. Relay + LED kuning di Wokwi ON & **tetap** (no auto-lock); LED hijau = MQTT connected
+3. Audit log muncul: `👑 ADMIN_REMOTE` → `🔓 UNLOCKED` (widget Status Pintu = UNLOCKED)
+4. Klik **"🔒 Tutup Pintu"** → relay + LED kuning OFF; audit `🛡️ ADMIN_LOCK` → `🔒 LOCKED`
+5. LWT: stop Wokwi mendadak → audit `🔴 offline (presence)` (state pintu tak terganggu)
 
 ---
 
@@ -100,13 +102,14 @@ Anda akan melihat 3 group:
 
 ### Ganti prefix topic (hindari tabrakan peserta lain)
 
-Edit 3 topic reference di flow:
+Edit 4 topic reference di flow:
 
 | Node | Topic lama | Topic baru (contoh) |
 |---|---|---|
 | `mqtt_sensor_in` | `bootcamp/sensor/01` | `bootcamp/andi/sensor/01` |
 | `mqtt_kontrol_out` + `button_unlock`/`button_lock` | `bootcamp/kontrol/pintu` | `bootcamp/andi/kontrol/pintu` |
 | `mqtt_status_in` | `bootcamp/status/pintu` | `bootcamp/andi/status/pintu` |
+| `mqtt_presence_in` | `bootcamp/status/presence` | `bootcamp/andi/status/presence` |
 
 **Jangan lupa update topic di `config.cpp` ESP32 juga** supaya sinkron.
 
@@ -140,6 +143,7 @@ Edit node broker config (id: `broker1`):
               bootcamp/sensor/01 ─────►  │ mqtt in → gauge + chart   │
                                             └──────────────────────────┘
               bootcamp/status/pintu ────►  │ mqtt in → text (audit)    │
+              bootcamp/status/presence ─►  │ mqtt in → text (audit)    │
                                             └──────────────────────────┘
    Subscribe bootcamp/kontrol/pintu ◄────  │ button → mqtt out         │
               ▲                              └──────────────────────────┘

@@ -42,7 +42,7 @@ void setupOutputs() {
 }
 
 // =====================
-// unlockDoor(source) — buka pintu 3 detik lalu kunci otomatis
+// unlockDoor(source) — buka pintu (persistent, no auto-lock)
 //
 // source: label audit untuk identifikasi trigger (mis. "firebase-admin")
 // =====================
@@ -182,6 +182,35 @@ void setStatus(const char* msg) {
     Serial.printf(">> Status set: %s\n", msg);
   } else {
     Serial.printf("!! setStatus gagal: HTTP %d\n", code);
+  }
+}
+
+// =====================
+// setPresence(msg) — PUT /status/presence.json = "msg"
+//
+// Presence (online/offline) DIPISAH dari state pintu supaya /status/pintu
+// selalu berisi lock/unlock yang bersih. (Firebase RTDB tak punya LWT
+// otomatis seperti MQTT — "offline" tidak tertulis saat disconnect.)
+// =====================
+void setPresence(const char* msg) {
+  if (!firebaseReady) return;
+  HTTPClient http;
+  http.setConnectTimeout(5000);
+  http.setTimeout(5000);
+  if (!http.begin(sslClient, rtdbUrl("/status/presence"))) {
+    Serial.println("!! setPresence: HTTP begin gagal.");
+    return;
+  }
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "\"" + String(msg) + "\"";   // JSON-encoded string
+  int code = http.PUT(body);
+  http.end();
+
+  if (code == 200) {
+    Serial.printf(">> Presence set: %s\n", msg);
+  } else {
+    Serial.printf("!! setPresence gagal: HTTP %d\n", code);
   }
 }
 
@@ -351,12 +380,15 @@ void startKontrolStream() {
       } else {
         Serial.printf(">> [SEED] Value '%s' bukan UNLOCK/LOCK — pintu tetap LOCKED.\n",
                       v.c_str());
+        setStatus("LOCKED");   // pastikan /status/pintu = state aktual
       }
     } else {
       Serial.println("✓ /kontrol/pintu kosong/null — siap menerima perintah.");
+      setStatus("LOCKED");     // state default = LOCKED
     }
   } else if (code == 404) {
     Serial.println("✓ /kontrol/pintu belum dibuat — siap menerima perintah.");
+    setStatus("LOCKED");       // state default = LOCKED
   } else {
     Serial.printf("⚠ startKontrolStream HTTP %d\n", code);
   }

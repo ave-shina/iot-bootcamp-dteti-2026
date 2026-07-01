@@ -38,7 +38,8 @@
    │   startKontrolStream() saat boot:                            │
    │       └─ baca awal + restore state (UNLOCK/LOCK)             │
    │                                                              │
-   │   PUT /status/pintu.json = "LOCKED"|"UNLOCKED"|"online"      │
+   │   PUT /status/pintu.json    = "LOCKED"|"UNLOCKED" (state)    │
+   │   PUT /status/presence.json = "online"           (presence)  │
    │   POST /logs/pintu.json = {event, ts, rssi}  ── audit trail  │
    │                                                              │
    │   Relay (GPIO 27) ◄── digitalWrite(HIGH/LOW)                 │
@@ -137,7 +138,7 @@
 ```
 topic-3/
 ├── wokwi/
-│   ├── sketch.ino             ← MAIN: setup() + loop() saja
+│   ├── sketch.cpp             ← MAIN: setup() + loop() saja
 │   ├── config.h     .cpp      ← Konstanta & globals (WiFi, DATABASE_URL, GPIO, sslClient)
 │   ├── firebase_handler.h .cpp← REST API Firebase + door control (setup, publish,
 │   │                            pollKontrol, setStatus, pushAudit, unlockDoor, lockDoor)
@@ -164,7 +165,7 @@ topic-3/
 ### 3.3 Dependency Graph Antar-Modul
 
 ```
-   sketch.ino
+   sketch.cpp
       │
       ├──► config.h
       │
@@ -202,7 +203,8 @@ Dideklarasikan `extern` di `config.h`, didefinisikan di `config.cpp` / `firebase
    │       ├── ts:     4521
    │       └── rssi:   -58
    ├── status/
-   │   └── pintu               ──► ESP32 PUT (current state: LOCKED | UNLOCKED | online)
+   │   ├── pintu               ──► ESP32 PUT (state pintu: LOCKED | UNLOCKED)
+   │   └── presence            ──► ESP32 PUT (presence koneksi: online)
    ├── kontrol/
    │   └── pintu               ──► Desired state (Console/Node-RED set "UNLOCK"|"LOCK")
    └── logs/
@@ -256,7 +258,7 @@ Dideklarasikan `extern` di `config.h`, didefinisikan di `config.cpp` / `firebase
       │      ├─ simpan sebagai lastKontrolValue
       │      └─ bila "UNLOCK" → unlockDoor("firebase-boot-restore")
       │         bila "LOCK"   → lockDoor("firebase-boot-restore")
-      ├─ 7. setStatus("online")        ← PUT /status/pintu.json
+      ├─ 7. setPresence("online")      ← PUT /status/presence.json
       └─ 8. LED hijau ON
       │
       ▼
@@ -675,7 +677,8 @@ while True:
    Suffix:    .json  (wajib di setiap path)
 
    PUT  /sensor/01.json       → timpa state sensor
-   PUT  /status/pintu.json    → current state ("LOCKED"|"UNLOCKED"|"online")
+   PUT  /status/pintu.json    → current state pintu ("LOCKED"|"UNLOCKED")
+   PUT  /status/presence.json → presence koneksi ("online")
    POST /logs/pintu.json      → append audit, response {"name":"<auto-id>"}
    GET  /kontrol/pintu.json   → baca desired state (poll tiap 5 dtk)
    PUT  /kontrol/pintu.json   → set desired state ("UNLOCK"|"LOCK") — dari admin

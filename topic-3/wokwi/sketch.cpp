@@ -11,15 +11,16 @@
  * STRUKTUR FILE (modular .h + .cpp)
  * ============================================================================
  *
- *   sketch.ino             ← MAIN ENTRY (file ini). Hanya setup() + loop().
+ *   sketch.cpp             ← MAIN ENTRY (file ini). Hanya setup() + loop().
  *   config.h     .cpp      ← Konstanta & globals (WiFi creds, Firebase URL/Key,
  *                            GPIO, DHT object).
  *   firebase_handler.h .cpp← API Firebase + door control: setupWiFi,
- *                            setupFirebase, publishSensor, setStatus, pushAudit,
- *                            startKontrolStream, setupOutputs, unlockDoor.
+ *                            setupFirebase, publishSensor, setStatus, setPresence,
+ *                            pushAudit, startKontrolStream, setupOutputs,
+ *                            unlockDoor, lockDoor.
  *
  *   Dependencies:
- *     sketch.ino  →  config.h
+ *     sketch.cpp  →  config.h
  *                →  firebase_handler.h
  *
  * ============================================================================
@@ -36,8 +37,8 @@
  *   │   3. dht.begin()                                        │
  *   │   4. setupWiFi()            ← firebase_handler          │
  *   │   5. setupFirebase()        ← firebase_handler          │
- *   │   6. startKontrolStream()   ← firebase_handler          │
- *   │   7. setStatus("online")    ← firebase_handler          │
+ *   │   6. startKontrolStream()   ← firebase_handler (restore)│
+ *   │   7. setPresence("online")  ← /status/presence          │
  *   │   8. LED hijau ON                                       │
  *   └─────────────────────────────────────────────────────────┘
  *        │
@@ -55,16 +56,15 @@
  *   │                           (1.5 detik internal)            │
  *   └─────────────────────────────────────────────────────────┘
  *
- *   EVENT PATH (polling berbasis REST):
+ *   EVENT PATH (polling berbasis REST, persistent state — opsi C):
  *
- *   pollKontrol() GET /kontrol/pintu.json, bila value baru == "UNLOCK":
- *        → pushAudit("ADMIN_REMOTE")
- *        → unlockDoor("firebase-admin")
- *              ├─ relay HIGH + LED kuning HIGH
- *              ├─ setStatus("UNLOCKED")
- *              ├─ delay(3000)  ← blocking 3 detik (demo)
- *              ├─ relay LOW + LED kuning LOW
- *              └─ setStatus("LOCKED")
+ *   pollKontrol() GET /kontrol/pintu.json tiap 1.5 detik:
+ *     • value baru == "UNLOCK" → pushAudit("ADMIN_REMOTE") → unlockDoor(...)
+ *     • value baru == "LOCK"   → pushAudit("ADMIN_LOCK")   → lockDoor(...)
+ *
+ *   unlockDoor():  relay HIGH + LED kuning HIGH, setStatus("UNLOCKED")
+ *                  (TETAP terbuka — TIDAK ada auto-lock / delay)
+ *   lockDoor():    relay LOW  + LED kuning LOW,  setStatus("LOCKED")
  *
  * ============================================================================
  * PATH MAPPING (Topik 2 MQTT → Topik 3 Firebase RTDB):
@@ -72,8 +72,12 @@
  *
  *   bootcamp/sensor/01     → /sensor/01          (PUT  = state overwrite)
  *   bootcamp/kontrol/pintu → /kontrol/pintu      (GET poll = deteksi perubahan)
- *   bootcamp/status/pintu  → /status/pintu       (PUT  = retained state)
+ *   bootcamp/status/pintu  → /status/pintu       (PUT  = state pintu LOCKED/UNLOCKED)
+ *   bootcamp/status/presence→ /status/presence   (PUT  = presence online/offline)
  *   (MQTT tidak punya)     → /logs/pintu/<auto>  (POST = append audit)
+ *
+ *   Catatan: state pintu & presence dipisah ke path berbeda (sama seperti
+ *   Topik 2) supaya /status/pintu selalu berisi lock/unlock yang bersih.
  *
  * ============================================================================
  * Wiring (lihat diagram.json):
@@ -117,7 +121,7 @@ void setup() {
   Serial.println("  ESP32 + Firebase RTDB (Sensor + Pintu)");
   Serial.println("============================================");
   Serial.println("  Kontrol pintu via Firebase Console / web.");
-  Serial.println("  Set /kontrol/pintu = \"UNLOCK\" untuk membuka.");
+  Serial.println("  Set /kontrol/pintu = \"UNLOCK\" (buka) atau \"LOCK\" (kunci).");
   Serial.println();
 
   dht.begin();                       // init sensor DHT22
@@ -125,8 +129,8 @@ void setup() {
   setupFirebase();                   // test konektivitas RTDB via REST GET
 
   if (firebaseReady) {
-    startKontrolStream();            // seed lastKontrolValue (tidak trigger)
-    setStatus("online");             // tulis status retained
+    startKontrolStream();            // seed + restore state pintu (setStatus via unlock/lockDoor)
+    setPresence("online");           // presence di path terpisah (/status/presence)
     digitalWrite(PIN_LED, HIGH);     // LED hijau = Firebase ready
 
     Serial.println();

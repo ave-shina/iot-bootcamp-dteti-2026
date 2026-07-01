@@ -30,7 +30,7 @@ Satu proyek Wokwi tunggal yang mendemonstrasikan **MQTT bi-directional** lengkap
                   │  Node-RED dashboard         │
                   │  localhost:1880/ui          │
                   │  - gauge suhu + chart       │
-                  │  - button "Buka Pintu"      │
+                  │  - tombol Buka & Tutup     │
                   │  - audit log akses pintu    │
                   └─────────────────────────────┘
 ```
@@ -56,15 +56,16 @@ Satu proyek Wokwi tunggal yang mendemonstrasikan **MQTT bi-directional** lengkap
 | Topic                          | Arah        | Payload                                            | Retain |
 | ------------------------------ | ----------- | -------------------------------------------------- | ------ |
 | `bootcamp/sensor/01`           | ESP → broker| JSON `{"id","suhu","lembap","ts","rssi"}`          | ❌     |
-| `bootcamp/kontrol/pintu`       | broker → ESP| `"UNLOCK"` (dari dashboard)                        | ❌     |
-| `bootcamp/status/pintu`        | ESP → broker| `online` / `offline` / `UNLOCKED` / `LOCKED` / `ADMIN_REMOTE` | ✅ |
+| `bootcamp/kontrol/pintu`       | broker → ESP| `"UNLOCK"` / `"LOCK"` (dari dashboard)             | ❌     |
+| `bootcamp/status/pintu`        | ESP → broker| `LOCKED` / `UNLOCKED` + audit `ADMIN_REMOTE` / `ADMIN_LOCK` | ✅ |
+| `bootcamp/status/presence`     | ESP → broker| `online` / `offline` (LWT — connection presence)   | ✅     |
 
 ---
 
 ## Alur Demo
 
 1. **Sensor publish** — tiap 5 detik, DHT22 dibaca → JSON dipublish ke `bootcamp/sensor/01` → LED biru blink.
-2. **Kontrol pintu via dashboard** — operator klik "Buka Pintu" di Node-RED → ESP terima `UNLOCK` → relay + LED kuning aktif 3 detik → publish `ADMIN_REMOTE` ke audit log → setelah 3 detik otomatis `LOCKED`.
+2. **Kontrol pintu via dashboard** — operator klik "🔑 Buka Pintu" → ESP terima `UNLOCK` → relay + LED kuning ON & **tetap** (no auto-lock) → audit `ADMIN_REMOTE` lalu state `UNLOCKED`. Klik "🔒 Tutup Pintu" → `LOCK` → relay OFF, audit `ADMIN_LOCK` lalu `LOCKED`. State pintu dipublikasi retained di `status/pintu`; presence (online/offline) terpisah di `status/presence`.
 
 ---
 
@@ -73,7 +74,7 @@ Satu proyek Wokwi tunggal yang mendemonstrasikan **MQTT bi-directional** lengkap
 ### 1. Setup Wokwi
 
 1. Buka https://wokwi.com → **New Project Arduino**.
-2. Ganti isi `diagram.json`, `sketch.c`, dan buat `libraries.txt` dari folder proyek ini.
+2. Ganti isi `diagram.json`, `sketch.cpp`, dan buat `libraries.txt` dari folder proyek ini.
 3. Upload juga `config.h`, `config.cpp`, `mqtt_handler.h`, `mqtt_handler.cpp`.
 4. **Start Simulation**.
 
@@ -86,7 +87,7 @@ Pastikan Serial Monitor (115200 baud) menampilkan:
   ESP32 MQTT ALL-IN-ONE (Sensor + Pintu)
 ============================================
   Kontrol pintu via dashboard Node-RED.
-  Klik tombol 'Buka Pintu' untuk membuka.
+  'Buka Pintu' = UNLOCK, 'Tutup Pintu' = LOCK.
 
 Menghubungkan WiFi: Wokwi-GUEST
 .....
@@ -105,11 +106,13 @@ Reconnect MQTT... OK
 
 ### 4. Test Kontrol Pintu (Subscriber)
 
-| Skenario       | Aksi                                  | Hasil Expected                                        |
-| -------------- | ------------------------------------- | ----------------------------------------------------- |
-| Buka via dashboard | Klik button "Buka Pintu" di Node-RED | Relay + LED kuning aktif 3 detik, audit `ADMIN_REMOTE` |
-| Manual via MQTT   | Publish `UNLOCK` ke `kontrol/pintu`  | Sama seperti di atas                                  |
-| LWT offline       | Stop simulasi mendadak               | Broker publish `offline` ke `status/pintu` (retained) |
+| Skenario           | Aksi                                       | Hasil Expected                                                |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------- |
+| Buka via dashboard | Klik "🔑 Buka Pintu" di Node-RED            | Relay + LED kuning ON & tetap; audit `ADMIN_REMOTE`→`UNLOCKED`|
+| Tutup via dashboard| Klik "🔒 Tutup Pintu" di Node-RED           | Relay + LED kuning OFF; audit `ADMIN_LOCK`→`LOCKED`           |
+| Manual via MQTT    | Publish `UNLOCK`/`LOCK` ke `kontrol/pintu` | Sama seperti di atas                                          |
+| State retained     | Buka dashboard baru / restart broker       | Widget Status Pintu langsung dapat `LOCKED`/`UNLOCKED`        |
+| LWT offline        | Stop simulasi mendadak                     | Broker publish `offline` ke `status/presence` (retained)      |
 
 ### 5. Node-RED Dashboard
 
@@ -135,7 +138,7 @@ Lihat `node-red/README.md` untuk setup Node-RED + import flow.
 
 ⚠️ **Broker `test.mosquitto.org` = PUBLIK tanpa auth.**
 - Siapa saja bisa subscribe topic Anda → **jangan** kirim data sensitif.
-- Siapa saja bisa publish `UNLOCK` → **bisa membuka pintu Anda dari jauh!**
+- Siapa saja bisa publish `UNLOCK`/`LOCK` → **bisa membuka/mengunci pintu Anda dari jauh!**
 - Untuk produksi → broker sendiri (Mosquitto/HiveMQ) + auth + TLS (port 8883) + ACL.
 
 ---

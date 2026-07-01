@@ -23,9 +23,10 @@ const uint16_t MQTT_PORT   = 1883;
 // Ganti prefix 'bootcamp' jadi 'bootcamp/<nama-anda>' supaya tidak
 // tabrakan dengan peserta lain di broker publik.
 // =====================
-const char* TOPIC_SENSOR  = "bootcamp/sensor/01";
-const char* TOPIC_KONTROL = "bootcamp/kontrol/pintu";
-const char* TOPIC_STATUS  = "bootcamp/status/pintu";
+const char* TOPIC_SENSOR   = "bootcamp/sensor/01";
+const char* TOPIC_KONTROL  = "bootcamp/kontrol/pintu";
+const char* TOPIC_STATUS   = "bootcamp/status/pintu";
+const char* TOPIC_PRESENCE = "bootcamp/status/presence";
 
 String      MQTT_CLIENT_ID = "esp32_all_in_01";
 
