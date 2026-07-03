@@ -21,14 +21,14 @@ const char* WIFI_PASS = "";
 // API_KEY tidak dipakai untuk test mode (rules publik). Disimpan untuk
 // kompatibilitas future bila ingin mengaktifkan auth.
 // =====================
-const char* DATABASE_URL = "https://YOUR-PROJECT-default-rtdb.firebaseio.com/";
+const char* DATABASE_URL = "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com";
 const char* API_KEY      = "YOUR-API-KEY";
 
 // =====================
 // Timing
 // =====================
-const unsigned long PUBLISH_INTERVAL_MS = 15000UL;  // 15 detik — publish sensor
-const unsigned long POLL_INTERVAL_MS    = 5000UL;   // 5 detik — poll admin override
+const unsigned long PUBLISH_INTERVAL_MS = 15000UL;   // 5 detik — publish sensor
+const unsigned long POLL_INTERVAL_MS    = 1500UL;   // 1.5 detik — poll admin override
 
 // =====================
 // Shared hardware globals

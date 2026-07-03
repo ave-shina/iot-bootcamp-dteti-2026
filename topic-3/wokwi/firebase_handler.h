@@ -7,13 +7,11 @@
  * Modul ini meng-encapsulate:
  *   - setupWiFi() + setupFirebase()   — inisialisasi
  *   - publishSensor()                 — write DHT22 ke /sensor/01 (self-throttled)
- *   - setStatus() / setPresence()     — write state pintu (/status/pintu) & presence (/status/presence)
- *   - pushAudit()                     — append audit log ke /logs/pintu
+ *   - setStatus() / pushAudit()       — write status & append audit log
  *   - startKontrolStream()            — initial seed untuk poll admin override
  *   - pollKontrol()                   — GET periodik /kontrol/pintu (ganti stream)
  *   - setupOutputs()                  — pinMode semua relay + LED
- *   - unlockDoor(source)              — buka pintu (persistent, no auto-lock)
- *   - lockDoor(source)                — kunci pintu (persistent)
+ *   - unlockDoor(source)              — buka pintu 3 detik lalu kunci otomatis
  */
 #pragma once
 
@@ -26,8 +24,7 @@ void setupFirebase();       // test konektivitas + set firebaseReady = true
 
 // ----- Operasi RTDB (REST: PUT/POST) -----
 void publishSensor();          // self-throttled (cek lastPublish internal)
-void setStatus(const char* msg);     // PUT /status/pintu   = state pintu (LOCKED/UNLOCKED)
-void setPresence(const char* msg);   // PUT /status/presence = presence (online/offline)
+void setStatus(const char* msg);
 void pushAudit(const char* event);
 
 // ----- Polling admin override (ganti "stream" mobizt) -----

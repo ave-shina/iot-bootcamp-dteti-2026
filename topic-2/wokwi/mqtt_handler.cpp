@@ -3,6 +3,13 @@
  */
 #include "mqtt_handler.h"
 
+// State pintu aktual (LOCKED default — relay LOW saat boot). Di-update oleh
+// unlockDoor/lockDoor dan dipakai reconnect() untuk re-publish state asli ke
+// TOPIC_STATUS, sehingga subscriber langsung dapat lock/unlock (bukan "online")
+// dan tidak bergantung pada retained broker yang bisa stale setelah reboot.
+// (Dideklarasikan di atas karena dipakai unlockDoor/lockDoor di bawah.)
+const char* doorState = "LOCKED";
+
 // =====================
 // setupOutputs() — pinMode + initial state semua GPIO
 //
@@ -72,12 +79,6 @@ PubSubClient  client(espClient);
 
 unsigned long lastReconnect = 0;
 unsigned long lastPublish   = 0;
-
-// State pintu aktual (LOCKED default — relay LOW saat boot). Di-update oleh
-// unlockDoor/lockDoor dan dipakai reconnect() untuk re-publish state asli ke
-// TOPIC_STATUS, sehingga subscriber langsung dapat lock/unlock (bukan "online")
-// dan tidak bergantung pada retained broker yang bisa stale setelah reboot.
-const char* doorState = "LOCKED";
 
 // =====================
 // setupWiFi() — koneksi WiFi (blocking dengan timeout 20s)

@@ -1,0 +1,517 @@
+[
+    {
+        "id": "8e87672a46ffac0f",
+        "type": "tab",
+        "label": "Topic 3.1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "77bffbceb349c07e",
+        "type": "inject",
+        "z": "8e87672a46ffac0f",
+        "name": "Poll sensor 15s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "15",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 160,
+        "wires": [
+            [
+                "15ce3c850c95905e"
+            ]
+        ]
+    },
+    {
+        "id": "7061011687591c19",
+        "type": "inject",
+        "z": "8e87672a46ffac0f",
+        "name": "Poll Status aktif ESP32 10s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 260,
+        "wires": [
+            [
+                "f2eae920ffc488cd"
+            ]
+        ]
+    },
+    {
+        "id": "24199fa109d56ce4",
+        "type": "inject",
+        "z": "8e87672a46ffac0f",
+        "name": "Poll status pintu 5s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 220,
+        "y": 360,
+        "wires": [
+            [
+                "26b898a967e5c7f7"
+            ]
+        ]
+    },
+    {
+        "id": "15ce3c850c95905e",
+        "type": "http request",
+        "z": "8e87672a46ffac0f",
+        "name": "GET /sensor/01.json",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com/sensor/01.json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 420,
+        "y": 160,
+        "wires": [
+            [
+                "19d49192ae9add9c"
+            ]
+        ]
+    },
+    {
+        "id": "3d03e4ca93a2e5b5",
+        "type": "debug",
+        "z": "8e87672a46ffac0f",
+        "name": "debug sensor",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "b21cb8b5a8d219f0",
+        "type": "ui_gauge",
+        "z": "8e87672a46ffac0f",
+        "name": "Gauge Suhu",
+        "group": "1936bd864d53d337",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Suhu",
+        "label": "°C",
+        "format": "{{payload.suhu}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 850,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "4c7c5527848bf5e0",
+        "type": "ui_gauge",
+        "z": "8e87672a46ffac0f",
+        "name": "Gauge Kelembapan",
+        "group": "1936bd864d53d337",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Kelembapan",
+        "label": "%",
+        "format": "{{payload.lembap}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 880,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "f2eae920ffc488cd",
+        "type": "http request",
+        "z": "8e87672a46ffac0f",
+        "name": "GET /status/presence.json",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com/sensor/01.json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 500,
+        "y": 260,
+        "wires": [
+            [
+                "00624643ff9f6207",
+                "e5ef1cd9c9551975"
+            ]
+        ]
+    },
+    {
+        "id": "26b898a967e5c7f7",
+        "type": "http request",
+        "z": "8e87672a46ffac0f",
+        "name": "GET /kontrol/pintu.json",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com/kontrol/pintu.json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 470,
+        "y": 360,
+        "wires": [
+            [
+                "ed9f0ce73d980b4f",
+                "75e87af57d48e769"
+            ]
+        ]
+    },
+    {
+        "id": "00624643ff9f6207",
+        "type": "debug",
+        "z": "8e87672a46ffac0f",
+        "name": "debug status ESP 32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 760,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "ed9f0ce73d980b4f",
+        "type": "debug",
+        "z": "8e87672a46ffac0f",
+        "name": "debug status pintu",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "75e87af57d48e769",
+        "type": "ui_text",
+        "z": "8e87672a46ffac0f",
+        "group": "611c873fd6f9ac29",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Status Kontrol Pintu",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 740,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "e5ef1cd9c9551975",
+        "type": "ui_text",
+        "z": "8e87672a46ffac0f",
+        "group": "611c873fd6f9ac29",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Status Aktif",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 730,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "a6090155e84e940e",
+        "type": "ui_button",
+        "z": "8e87672a46ffac0f",
+        "name": "button UNLOCK",
+        "group": "797a1ca625b4b145",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "button UNLOCK",
+        "tooltip": "Buka pintu via Firebase",
+        "color": "#ffffff",
+        "bgcolor": "#CA3838",
+        "className": "",
+        "icon": "lock-open",
+        "payload": "\"UNLOCK\"",
+        "payloadType": "str",
+        "topic": "topic.unlock",
+        "topicType": "msg",
+        "x": 200,
+        "y": 480,
+        "wires": [
+            [
+                "7cb61dcc25e6dfdb"
+            ]
+        ]
+    },
+    {
+        "id": "7cb61dcc25e6dfdb",
+        "type": "http request",
+        "z": "8e87672a46ffac0f",
+        "name": "PUT /kontrol/pintu = UNLOCK",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com/kontrol/pintu.json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 490,
+        "y": 480,
+        "wires": [
+            [
+                "51fbadec59e70072"
+            ]
+        ]
+    },
+    {
+        "id": "3f9a53deda1d293b",
+        "type": "http request",
+        "z": "8e87672a46ffac0f",
+        "name": "PUT /kontrol/pintu = LOCK",
+        "method": "PUT",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://bootcamp-iot-dteti-2026-ave-default-rtdb.firebaseio.com/kontrol/pintu.json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 480,
+        "y": 580,
+        "wires": [
+            [
+                "cfcbbd41384e779d"
+            ]
+        ]
+    },
+    {
+        "id": "51fbadec59e70072",
+        "type": "ui_toast",
+        "z": "8e87672a46ffac0f",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "general",
+        "name": "Toast UNLOCK",
+        "x": 740,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "cfcbbd41384e779d",
+        "type": "ui_toast",
+        "z": "8e87672a46ffac0f",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "general",
+        "name": "Toast LOCK",
+        "x": 710,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "e28cf32a0fda5b2a",
+        "type": "ui_button",
+        "z": "8e87672a46ffac0f",
+        "name": "button LOCK",
+        "group": "797a1ca625b4b145",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "button LOCK",
+        "tooltip": "Buka pintu via Firebase",
+        "color": "#ffffff",
+        "bgcolor": "#CA3838",
+        "className": "",
+        "icon": "lock",
+        "payload": "\"LOCK\"",
+        "payloadType": "str",
+        "topic": "topic.unlock",
+        "topicType": "msg",
+        "x": 190,
+        "y": 580,
+        "wires": [
+            [
+                "3f9a53deda1d293b"
+            ]
+        ]
+    },
+    {
+        "id": "19d49192ae9add9c",
+        "type": "json",
+        "z": "8e87672a46ffac0f",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 650,
+        "y": 140,
+        "wires": [
+            [
+                "b21cb8b5a8d219f0",
+                "4c7c5527848bf5e0",
+                "3d03e4ca93a2e5b5"
+            ]
+        ]
+    },
+    {
+        "id": "1936bd864d53d337",
+        "type": "ui_group",
+        "name": "Sensor DHT22",
+        "tab": "0827f0f5b1473fae",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "611c873fd6f9ac29",
+        "type": "ui_group",
+        "name": "Audit Log",
+        "tab": "0827f0f5b1473fae",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "797a1ca625b4b145",
+        "type": "ui_group",
+        "name": "Kontrol Pintu",
+        "tab": "0827f0f5b1473fae",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "0827f0f5b1473fae",
+        "type": "ui_tab",
+        "name": "3.1 Firebase",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "55ea817bc18f75b4",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

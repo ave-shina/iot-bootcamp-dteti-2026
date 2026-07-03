@@ -9,8 +9,7 @@
  * Test mode (rules publik): tidak butuh ?auth=... di URL.
  * Produksi: tambahkan auth param bila rules menuntutnya.
  */
-#include "firebase_handler.h" 
-// 
+#include "firebase_handler.h"
 
 // =====================
 // rtdbUrl(path) — bangun URL REST API Firebase RTDB
@@ -42,7 +41,7 @@ void setupOutputs() {
 }
 
 // =====================
-// unlockDoor(source) — buka pintu (persistent, no auto-lock)
+// unlockDoor(source) — buka pintu 3 detik lalu kunci otomatis
 //
 // source: label audit untuk identifikasi trigger (mis. "firebase-admin")
 // =====================
@@ -185,76 +184,6 @@ void setStatus(const char* msg) {
   }
 }
 
-// =====================
-// setPresence(msg) — PUT /status/presence.json = "msg"
-//
-// Presence (online/offline) DIPISAH dari state pintu supaya /status/pintu
-// selalu berisi lock/unlock yang bersih. (Firebase RTDB tak punya LWT
-// otomatis seperti MQTT — "offline" tidak tertulis saat disconnect.)
-// =====================
-void setPresence(const char* msg) {
-  if (!firebaseReady) return;
-  HTTPClient http;
-  http.setConnectTimeout(5000);
-  http.setTimeout(5000);
-  if (!http.begin(sslClient, rtdbUrl("/status/presence"))) {
-    Serial.println("!! setPresence: HTTP begin gagal.");
-    return;
-  }
-  http.addHeader("Content-Type", "application/json");
-
-  String body = "\"" + String(msg) + "\"";   // JSON-encoded string
-  int code = http.PUT(body);
-  http.end();
-
-  if (code == 200) {
-    Serial.printf(">> Presence set: %s\n", msg);
-  } else {
-    Serial.printf("!! setPresence gagal: HTTP %d\n", code);
-  }
-}
-
-// =====================
-// pushAudit(event) — POST /logs/pintu.json → append entry baru
-//
-// Body: JSON object {event, ts, rssi}. Response: {"name":"<auto-id>"}.
-// =====================
-void pushAudit(const char* event) {
-  if (!firebaseReady) return;
-  HTTPClient http;
-  http.setConnectTimeout(5000);
-  http.setTimeout(5000);
-  if (!http.begin(sslClient, rtdbUrl("/logs/pintu"))) {
-    Serial.println("!! pushAudit: HTTP begin gagal.");
-    return;
-  }
-  http.addHeader("Content-Type", "application/json");
-
-  StaticJsonDocument<128> doc;
-  doc["event"] = event;
-  doc["ts"]    = (int)(millis() / 1000);   // detik (hemat space)
-  doc["rssi"]  = WiFi.RSSI();
-
-  String body;
-  serializeJson(doc, body);
-
-  int code = http.POST(body);
-  String resp = http.getString();
-  http.end();
-
-  if (code == 200) {
-    StaticJsonDocument<128> rdoc;
-    if (!deserializeJson(rdoc, resp)) {
-      const char* name = rdoc["name"];
-      Serial.printf(">> Audit pushed: %s (key=%s)\n",
-                    event, name ? name : "?");
-    } else {
-      Serial.printf(">> Audit pushed: %s\n", event);
-    }
-  } else {
-    Serial.printf("!! pushAudit gagal: HTTP %d\n", code);
-  }
-}
 
 // =====================
 // publishSensor() — baca DHT22 + PUT /sensor/01.json
@@ -380,15 +309,12 @@ void startKontrolStream() {
       } else {
         Serial.printf(">> [SEED] Value '%s' bukan UNLOCK/LOCK — pintu tetap LOCKED.\n",
                       v.c_str());
-        setStatus("LOCKED");   // pastikan /status/pintu = state aktual
       }
     } else {
       Serial.println("✓ /kontrol/pintu kosong/null — siap menerima perintah.");
-      setStatus("LOCKED");     // state default = LOCKED
     }
   } else if (code == 404) {
     Serial.println("✓ /kontrol/pintu belum dibuat — siap menerima perintah.");
-    setStatus("LOCKED");       // state default = LOCKED
   } else {
     Serial.printf("⚠ startKontrolStream HTTP %d\n", code);
   }
@@ -398,7 +324,7 @@ void startKontrolStream() {
 // =====================
 // pollKontrol() — GET /kontrol/pintu.json tiap POLL_INTERVAL_MS
 //
-// Bila value berubah dan == "UNLOCK", trigger pushAudit + unlockDoor.
+// Bila value berubah dan == "UNLOCK", trigger  unlockDoor.
 // Bukan "stream" sejati (SSE), tapi cukup untuk demo bootcamp.
 // =====================
 void pollKontrol() {
@@ -451,10 +377,8 @@ void pollKontrol() {
   Serial.printf("<< [POLL] *** PERUBAHAN DETECTED → '%s' ***\n", v.c_str());
 
   if (v == "UNLOCK") {
-    pushAudit("ADMIN_REMOTE");
     unlockDoor("firebase-admin");
   } else if (v == "LOCK") {
-    pushAudit("ADMIN_LOCK");
     lockDoor("firebase-admin");
   } else {
     Serial.print("!! [POLL] Perintah tidak dikenal: ");

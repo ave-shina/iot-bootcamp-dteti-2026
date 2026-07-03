@@ -1,0 +1,607 @@
+[
+    {
+        "id": "d43fb467d47a24b9",
+        "type": "tab",
+        "label": "Topic 2.1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "d4dd8444c11cab3b",
+        "type": "mqtt in",
+        "z": "d43fb467d47a24b9",
+        "name": "Subscribe sensor/01",
+        "topic": "bootcamp/sensor/01",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "cd6831fbbbc4e2e1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 230,
+        "y": 160,
+        "wires": [
+            [
+                "8c9549274ccf9e98"
+            ]
+        ]
+    },
+    {
+        "id": "8c9549274ccf9e98",
+        "type": "json",
+        "z": "d43fb467d47a24b9",
+        "name": "Parse JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 510,
+        "y": 160,
+        "wires": [
+            [
+                "bee83b027122cbc9",
+                "86f8cd578e4ee656",
+                "3efb4d904f77d1e9",
+                "bba6ac374a95a9c9",
+                "ba960a1c8d615f57"
+            ]
+        ]
+    },
+    {
+        "id": "bee83b027122cbc9",
+        "type": "ui_gauge",
+        "z": "d43fb467d47a24b9",
+        "name": "Gauge Suhu",
+        "group": "1425de3e815bcab9",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "°C",
+        "format": "{{payload.suhu}}",
+        "min": 0,
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 770,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "86f8cd578e4ee656",
+        "type": "ui_gauge",
+        "z": "d43fb467d47a24b9",
+        "name": "Gauge Kelembapan",
+        "group": "1425de3e815bcab9",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "gauge",
+        "label": "%",
+        "format": "{{payload.lembap}}",
+        "min": 0,
+        "max": "50",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 800,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "3efb4d904f77d1e9",
+        "type": "change",
+        "z": "d43fb467d47a24b9",
+        "name": "Ambil payload.suhu",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.suhu",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 470,
+        "y": 300,
+        "wires": [
+            [
+                "35494d9983310165"
+            ]
+        ]
+    },
+    {
+        "id": "35494d9983310165",
+        "type": "ui_chart",
+        "z": "d43fb467d47a24b9",
+        "name": "Chart Suhu",
+        "group": "1425de3e815bcab9",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "Historis Suhu (°C)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 750,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bba6ac374a95a9c9",
+        "type": "change",
+        "z": "d43fb467d47a24b9",
+        "name": "Ambil payload.lembap",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.lembap",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 380,
+        "wires": [
+            [
+                "4a2d8cb9f6efaec7"
+            ]
+        ]
+    },
+    {
+        "id": "4a2d8cb9f6efaec7",
+        "type": "ui_chart",
+        "z": "d43fb467d47a24b9",
+        "name": "Chart Kelembapan",
+        "group": "1425de3e815bcab9",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "Historis Kelembapan (%)",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 810,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ba960a1c8d615f57",
+        "type": "debug",
+        "z": "d43fb467d47a24b9",
+        "name": "Debug Sensor DHT22",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "a1c40939b6efe15e",
+        "type": "ui_button",
+        "z": "d43fb467d47a24b9",
+        "name": "Buka Pintu",
+        "group": "2f27808e6861d9a6",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "🔑 Buka Pintu",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#ca3838",
+        "className": "",
+        "icon": "lock-open",
+        "payload": "UNLOCK",
+        "payloadType": "str",
+        "topic": "bootcamp/kontrol/pintu",
+        "topicType": "msg",
+        "x": 210,
+        "y": 560,
+        "wires": [
+            [
+                "4c2b1e695be0dd83"
+            ]
+        ]
+    },
+    {
+        "id": "8b75df866c73e4ab",
+        "type": "ui_button",
+        "z": "d43fb467d47a24b9",
+        "name": "Tutup Pintu",
+        "group": "2f27808e6861d9a6",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "🔑 Tutup Pintu",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "#2e7d32",
+        "className": "",
+        "icon": "lock",
+        "payload": "LOCK",
+        "payloadType": "str",
+        "topic": "bootcamp/kontrol/pintu",
+        "topicType": "msg",
+        "x": 210,
+        "y": 620,
+        "wires": [
+            [
+                "4c2b1e695be0dd83"
+            ]
+        ]
+    },
+    {
+        "id": "4c2b1e695be0dd83",
+        "type": "mqtt out",
+        "z": "d43fb467d47a24b9",
+        "name": "Publish kontrol/pintu",
+        "topic": "bootcamp/kontrol/pintu",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "f707f008fcf1159c",
+        "x": 540,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "6bb46ae774200530",
+        "type": "mqtt in",
+        "z": "d43fb467d47a24b9",
+        "name": "Status Pintu",
+        "topic": "bootcamp/status/pintu",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "cd6831fbbbc4e2e1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 210,
+        "y": 720,
+        "wires": [
+            [
+                "dffd29d6f7ab8cd9",
+                "159173a0bae066ab"
+            ]
+        ]
+    },
+    {
+        "id": "b7427c2b20e5ab63",
+        "type": "mqtt in",
+        "z": "d43fb467d47a24b9",
+        "name": "Status ESP32",
+        "topic": "bootcamp/status/presence",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "cd6831fbbbc4e2e1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 210,
+        "y": 800,
+        "wires": [
+            [
+                "87d4f07939980463",
+                "1d980174b234d269"
+            ]
+        ]
+    },
+    {
+        "id": "dffd29d6f7ab8cd9",
+        "type": "function",
+        "z": "d43fb467d47a24b9",
+        "name": "Format audit dengan timestamp",
+        "func": "// Tambahkan timestamp ke payload audit (KHUSUS event pintu).\n// Presence online/offline ditangani format_presence di topik terpisah.\nconst now = new Date();\nconst ts = now.toLocaleTimeString('id-ID');\n\n// Emoji berdasarkan event pintu\nlet emoji = '📋';\nconst e = msg.payload;\nif (e === 'UNLOCKED') emoji = '🔓';\nelse if (e === 'LOCKED') emoji = '🔒';\nelse if (e === 'ADMIN_REMOTE') emoji = '👑';\nelse if (e === 'ADMIN_LOCK') emoji = '🛡️';\n\nmsg.payload = `${ts}  ${emoji}  ${e}`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 720,
+        "wires": [
+            [
+                "ebb16c3197f79e69"
+            ]
+        ]
+    },
+    {
+        "id": "87d4f07939980463",
+        "type": "function",
+        "z": "d43fb467d47a24b9",
+        "name": "Format status ESP32 dengan timestamp",
+        "func": "// Timestamp + emoji untuk event presence (TERPISAH dari state pintu).\n// Hanya ke audit log — TIDAK ke widget Status Pintu (itu khusus lock/unlock).\nconst now = new Date();\nconst ts = now.toLocaleTimeString('id-ID');\nconst e = msg.payload;\nconst emoji = (e === 'online') ? '🟢' : (e === 'offline') ? '🔴' : '📋';\nmsg.payload = `${ts}  ${emoji}  ${e}  (presence)`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 800,
+        "wires": [
+            [
+                "c7dc35fd4ce02a1d"
+            ]
+        ]
+    },
+    {
+        "id": "ebb16c3197f79e69",
+        "type": "ui_text",
+        "z": "d43fb467d47a24b9",
+        "group": "3b02d2265a6f1332",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Status Pintu",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 870,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "c7dc35fd4ce02a1d",
+        "type": "ui_text",
+        "z": "d43fb467d47a24b9",
+        "group": "3b02d2265a6f1332",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Status ESP32 terakhir",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 900,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "159173a0bae066ab",
+        "type": "debug",
+        "z": "d43fb467d47a24b9",
+        "name": "Debug Status Pintu",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 510,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "1d980174b234d269",
+        "type": "debug",
+        "z": "d43fb467d47a24b9",
+        "name": "Debug Status ESP32",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "cd6831fbbbc4e2e1",
+        "type": "mqtt-broker",
+        "name": "test.mosquitto.org",
+        "broker": "test.mosquitto.org",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "1425de3e815bcab9",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "1217e134f3ebd8a9",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2f27808e6861d9a6",
+        "type": "ui_group",
+        "name": "2.1 Kontrol Pintu",
+        "tab": "1217e134f3ebd8a9",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "f707f008fcf1159c",
+        "type": "mqtt-broker",
+        "name": "test.mosquitto.org",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "3b02d2265a6f1332",
+        "type": "ui_group",
+        "name": "2.1 Audit",
+        "tab": "1217e134f3ebd8a9",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "1217e134f3ebd8a9",
+        "type": "ui_tab",
+        "name": "Topic 2.1",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "6f59333966f153bb",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
